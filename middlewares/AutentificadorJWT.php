@@ -4,79 +4,56 @@
 
 class AutentificadorJWT
   { 
-private static $claveSecreta = 'JWT';
-    private static $tipoEncriptacion = ['HS256'];
+    private static $miClaveSecreta = "Progra3"; //Clave Secreta
+    private static $algoritmoDeCodificacion = ['HS256']; // Algoritmo de Codificacion
     private static $aud = null;
-    
-    public static function CrearToken($datos)
+
+    public static function NuevoToken($data)
     {
         $ahora = time();
         $payload = array(
-            'iat'=>$ahora,
-            'exp' => $ahora + (60*60*48),
+            'iat' => $ahora,
+            'exp' => $ahora + 2592000, // 1 mes
             'aud' => self::Aud(),
-            'data' => $datos,
-            'app'=> "JWT"
+            'data' => $data
         );
-     
-        return JWT::encode($payload, self::$claveSecreta);
+        return JWT::encode($payload, self::$miClaveSecreta);
     }
-    
-    public static function VerificarToken($token)
+
+    public static function ValidarToken($token)
     {
-        if (empty($token)) 
+        if($token == "" || empty($token))
         {
-            throw new Exception("El token está vacío.");
+            throw new Exception("El token esta vacio!");
         }
-    
-        try 
+        try
         {
-            // Se decodifica el token JWT utilizando la clave secreta y el tipo de encriptación
-            $decodificado = JWT::decode($token, self::$claveSecreta, self::$tipoEncriptacion);
-        } 
-        catch (Exception $e) 
-        {
-            // Si ocurre una excepción durante la decodificación, se lanza nuevamente para que sea manejada por el código que llamó a este método
-               ;throw $e;
-          
+            $payload = AutentificadorJWT::ObtenerPayLoad($token);
         }
-    
-        if ($decodificado->aud !== self::Aud()) 
+        catch (Exception $excepcion)
         {
-            // Si el campo "aud" del token no coincide con el resultado de la función Aud(), se lanza una excepción indicando que el usuario no está autorizado
-            throw new Exception("Usuario no autorizado");
+            throw $excepcion;
         }
-    
-        // Se retorna el token decodificado
-        return $decodificado;
+        if($payload->aud !== self::Aud())
+        {
+            throw new Exception("Usuario o contraseña no validos!");
+        }
     }
-    
-   
-     public static function ObtenerPayLoad($token)
-    {
-        return JWT::decode(
-            $token,
-            self::$claveSecreta,
-            self::$tipoEncriptacion
-        );
-    }
-     public static function ObtenerData($token)
-    {
-        return JWT::decode(
-            $token,
-            self::$claveSecreta,
-            self::$tipoEncriptacion
-        )->data;
-    }
+
     private static function Aud()
     {
         $aud = '';
         
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) 
+        {
             $aud = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        } 
+        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) 
+        {
             $aud = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
+        } 
+        else 
+        {
             $aud = $_SERVER['REMOTE_ADDR'];
         }
         
@@ -84,8 +61,27 @@ private static $claveSecreta = 'JWT';
         $aud .= gethostname();
         
         return sha1($aud);
+    }
+
+    public static function ObtenerPayLoad($token)
+    {
+        return JWT::decode(
+            $token,
+            self::$miClaveSecreta,
+            self::$algoritmoDeCodificacion
+        );
+    }
+    
+    public static function ObtenerData($token)
+    {
+        return JWT::decode(
+            $token,
+            self::$miClaveSecreta,
+            self::$algoritmoDeCodificacion
+        )->data;
+    }
    }
- }
+?>
 
 
 

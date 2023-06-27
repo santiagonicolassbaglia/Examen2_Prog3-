@@ -14,13 +14,14 @@ use Slim\Routing\RouteContext;
 
 require_once './db/AccesoDatos.php';
 require __DIR__ . "./vendor/autoload.php";
- require_once './middlewares/AutentificadorJWT.php';
+require_once './middlewares/AutentificadorJWT.php';
 require_once './middlewares/Logger.php';
-
+require_once './middlewares/MWToken.php';
+require_once './controllers/LoginController.php';
 require_once './controllers/ArmaController.php';
 require_once './controllers/UsuarioController.php';
 require_once './controllers/VentaArmasController.php';
- 
+ require_once './middlewares/MWAdmin.php';
 
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -63,34 +64,31 @@ $app->addErrorMiddleware(true, true, true);
 //     });
 //   });
 
- 
-  $app->group('/loguin', function (RouteCollectorProxy $group){
-    $group->post('[/]', \Logger::class . ':GenerarToken') ;
-  });
+$app->post('/login', \LoginController::class . ':GenerarToken');
   
   $app->group('/usuario', function (RouteCollectorProxy $group) {
       $group->get('[/]', \UsuarioController::class . ':TraerTodos');
       $group->post('[/]', \UsuarioController::class . ':CargarUno');
-   })->add(\Logger::class . ':GenerarToken');
-  //  ->add(\Logger::class . ':VerificarToken');
+   } );
+ 
   
   $app->group('/arma', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \ArmaController::class . ':CargarUno')->add(\Logger::class . ':VerificarToken');
+    $group->post('[/]', \ArmaController::class . ':CargarUno')->add(new MWAdmin()) ;
     $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltrado');
-    $group->get('/unico/{id}', \ArmaController::class . ':TraerFiltradoId')->add(\Logger::class . ':VerificarTokenGet');
-    $group->get('[/]', \ArmaController::class . ':TraerTodos');
+    $group->get('/unico/{id}', \ArmaController::class . ':TraerFiltradoId') ;
+    $group->get('[/]', \ArmaController::class . ':TraerTodos')->add(new MWToken());
   
   });
-  // ->add(\Logger::class . ':VerificarToken');
+   
   
   $app->group('/ventaArmas', function (RouteCollectorProxy $group){
     $group->post('[/]', \VentaArmasController::class . ':CargarUno');
     $group->get('/{primerFecha}/{segundaFecha}/{nacionalidad}', \VentaArmasController::class . ':TraerTodosFiltradoPorNacionalidadYFecha');
-    // ->add(\Logger::class . ':VerificarTokenGet');
+    
     $group->get('/{nombre}', \VentaArmasController::class . ':TraerFiltrado');
-    // ->add(\Logger::class . ':VerificarTokenGet');
+    
   });
-  // ->add(\Logger::class . ':VerificarToken');
+   
   
   
   // $app->post("/arma", \ArmaController::class. ":CargarUno");
