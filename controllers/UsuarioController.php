@@ -63,7 +63,7 @@ class UsuarioController extends Usuario implements IApiUsable
     
         //  //CrearToken
         //   $datos = array('usuario' => $usuario, 'clave' => $clave);
-        //   $token = AutentificadorJWT::CrearTokenUsuario($datos);
+        //   $token = AutentificadorJWT::CrearToken($datos);
         //   $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
         //   $response->getBody()->write($payload);
        

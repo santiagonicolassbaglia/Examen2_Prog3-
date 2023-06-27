@@ -14,31 +14,54 @@ class VentaArmasController extends VentaArmas implements IApiUsable
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-       
-        $cantidad = $parametros['cantidad'];
-        $idArma = $parametros['idArma'];
-        $arma= Arma:: ObtenerArma($parametros['idArma']);
-        $usuario= AutentificadorJWT:: ObtenerData($parametros['token']);
-        $VentaArma= new VentaArmas();
-        $VentaArma->fecha= date("Y-m-d");
-        $VentaArma->precio=$cantidad*$arma->precio ;
-        $VentaArma->cantidad= $cantidad;
-        $VentaArma->idArma= $idArma;
-        $VentaArma->idUsuario= $usuario->id;
 
-        $VentaArma->Crear();
+        $requiredParams = ['idUsuario', 'idArma', 'precio', 'cantidad', 'fecha'];
 
-        if(isset($_FILES['foto'])){
-            $foto= $_FILES['foto'];
-            $ruta= 'FotosArma2023/' . $arma->nombre . "-" . $usuario->usuario . "-" . date("y-m-d") . ".png";
-            move_uploaded_file($foto['tmp_name'],$ruta);
+        $missingParams = [];
+        foreach ($requiredParams as $param) {
+            if (!isset($parametros[$param])) {
+                $missingParams[] = $param;
+            }
         }
 
-        $payload = json_encode(array("mensaje" => "Venta del Arma realizada con exito"));
+        if (!empty($missingParams)) {
+            $payload = json_encode(array("error" => "Falta el campo: " . implode(', ', $missingParams)));
+            $response->getBody()->write($payload);
+            return $response
+                ->withStatus(400)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        $idUsuario = $parametros['idUsuario'];
+        $idArma = $parametros['idArma'];
+        $precio = $parametros['precio'];
+        $cantidad = $parametros['cantidad'];
+        $fecha = $parametros['fecha'];
+
+        $venta = new VentaArmas();
+        $venta->idUsuario = $idUsuario;
+        $venta->idArma = $idArma;
+        $venta->precio = $precio;
+        $venta->cantidad = $cantidad;
+        $venta->fecha = $fecha;
+
+        $ventaId = $venta->Crear();
+ 
+        $uploadedFiles = $request->getUploadedFiles();
+        if (isset($uploadedFiles['imagen'])) {
+            $imagen = $uploadedFiles['imagen'];
+            if ($imagen->getError() === UPLOAD_ERR_OK) {
+                $extension = pathinfo($imagen->getClientFilename(), PATHINFO_EXTENSION);
+                $nombreArchivo = $venta->idArma . '_' . $venta->idUsuario . '_' . date('Ymd') . '.' . $extension;
+                $rutaImagen = './FotosArma2023/' . $nombreArchivo;
+                $imagen->moveTo($rutaImagen);
+            }
+        }
+
+        $payload = json_encode(array("mensaje" => "VentaArmas creada con éxito", "idVenta" => $ventaId));
 
         $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
 
@@ -73,10 +96,10 @@ class VentaArmasController extends VentaArmas implements IApiUsable
    
 
     $consulta = "SELECT *
-                 FROM ventas
-                 INNER JOIN arma ON ventas.idArma = arma.id
+                 FROM ventasArmas
+                 INNER JOIN arma ON ventasArmas.idArma = arma.id
                  WHERE arma.nacionalidad = :nacionalidad
-                 AND ventas.fecha BETWEEN :fechaInicio AND :fechaFin";
+                 AND ventasArmas.fecha BETWEEN :fechaInicio AND :fechaFin";
 
     $objAccesoDatos = AccesoDatos::obtenerInstancia();
     $stmt = $objAccesoDatos->prepararConsulta($consulta);

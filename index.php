@@ -49,7 +49,7 @@ $app->addErrorMiddleware(true, true, true);
   
 //       try 
 //       {
-//         $token = AutentificadorJWT::CrearTokenEmpleado($datos);
+//         $token = AutentificadorJWT::CrearToken($datos);
 //         $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
 //       } 
 //       catch (Exception $e) 
@@ -64,32 +64,38 @@ $app->addErrorMiddleware(true, true, true);
 //   });
 
  
-  // $app->group('/login', function (RouteCollectorProxy $group){
-  //   $group->post('[/]', \Logger::class . ':Login');
-  // });
+  $app->group('/loguin', function (RouteCollectorProxy $group){
+    $group->post('[/]', \Logger::class . ':GenerarToken') ;
+  });
   
-  // $app->group('/usuario', function (RouteCollectorProxy $group) {
-  //     $group->get('[/]', \UsuarioController2::class . ':TraerTodos');
-  //     $group->post('[/]', \UsuarioController2::class . ':CargarUno');
-   // });//->add(\Logger::class . ':GenerarToken')->add(\Logger::class . ':VerificarToken');
+  $app->group('/usuario', function (RouteCollectorProxy $group) {
+      $group->get('[/]', \UsuarioController::class . ':TraerTodos');
+      $group->post('[/]', \UsuarioController::class . ':CargarUno');
+   })->add(\Logger::class . ':GenerarToken');
+  //  ->add(\Logger::class . ':VerificarToken');
   
-  // $app->group('/arma', function (RouteCollectorProxy $group) {
-  //   $group->post('[/]', \ArmaController::class . ':CargarUno');
-    // $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltrado');
-    // $group->get('/unico/{id}', \ArmaController::class . ':TraerFiltradoId');//->add(\Logger::class . ':VerificarTokenGet');
-    // $group->get('[/]', \ArmaController::class . ':TraerTodos');
+  $app->group('/arma', function (RouteCollectorProxy $group) {
+    $group->post('[/]', \ArmaController::class . ':CargarUno')->add(\Logger::class . ':VerificarToken');
+    $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltrado');
+    $group->get('/unico/{id}', \ArmaController::class . ':TraerFiltradoId')->add(\Logger::class . ':VerificarTokenGet');
+    $group->get('[/]', \ArmaController::class . ':TraerTodos');
   
-  // })->add(\Logger::class . ':VerificarToken');
+  });
+  // ->add(\Logger::class . ':VerificarToken');
   
-  // $app->group('/venta', function (RouteCollectorProxy $group){
-  //   $group->post('[/]', \VentaArmasController::class . ':CargarUno');
-  //   $group->get('/{primerFecha}/{segundaFecha}', \VentaArmasController::class . ':TraerTodos');//->add(\Logger::class . ':VerificarTokenGet');
-  //   $group->get('/{nombre}', \VentaArmasController::class . ':TraerFiltrado');//->add(\Logger::class . ':VerificarTokenGet');
-  // })->add(\Logger::class . ':VerificarToken');
+  $app->group('/ventaArmas', function (RouteCollectorProxy $group){
+    $group->post('[/]', \VentaArmasController::class . ':CargarUno');
+    $group->get('/{primerFecha}/{segundaFecha}/{nacionalidad}', \VentaArmasController::class . ':TraerTodosFiltradoPorNacionalidadYFecha');
+    // ->add(\Logger::class . ':VerificarTokenGet');
+    $group->get('/{nombre}', \VentaArmasController::class . ':TraerFiltrado');
+    // ->add(\Logger::class . ':VerificarTokenGet');
+  });
+  // ->add(\Logger::class . ':VerificarToken');
   
   
-  $app->post("/arma", \ArmaController::class. ":CargarUno");
-  $app->post("/usuario", \UsuarioController::class. ":CargarUno");
+  // $app->post("/arma", \ArmaController::class. ":CargarUno");
+  // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
+  //  $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   $app->run();
 
 ?>

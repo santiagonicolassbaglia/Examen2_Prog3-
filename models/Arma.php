@@ -18,7 +18,7 @@ class Arma
         
         $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
         $consulta->bindValue(':precio', $this->precio, PDO::PARAM_INT);
-        $consulta->bindValue(':foto', $this->foto, PDO::PARAM_STR);
+        $consulta->bindValue(':foto', $this->foto );
         $consulta->bindValue(':nacionalidad', $this->nacionalidad, PDO::PARAM_STR);
         $consulta->bindValue(':stock', $this->stock, PDO::PARAM_INT);
 
