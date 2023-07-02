@@ -3,61 +3,14 @@ require_once './models/Arma.php';
  
 require_once './interfaces/IApiUsable.php';
 require_once './db/AccesoDatos.php';
- 
+ require_once'./models/archivosCSVoPDF.php';
+
 
  
 
 class ArmaController extends Arma implements IApiUsable
 { 
-    // public function CargarUno($request, $response, $args)
-    // {
-    //     $parametros = $request->getParsedBody();
-    
-    //     $requiredParams = ['nombre', 'precio', 'foto', 'nacionalidad','stock'];
-    
-    //     $missingParams = [];
-    //     foreach ($requiredParams as $param) {
-    //         if (!isset($parametros[$param])) {
-    //             $missingParams[] = $param;
-    //         }
-    //     }
-       
-    //     if (!empty($missingParams)) {
-    //         $payload = json_encode(array("error" => "Falta el campo: " . implode(', ', $missingParams)));
-    //         $response->getBody()->write($payload);
-    //         return $response
-    //             ->withStatus(400)
-    //             ->withHeader('Content-Type', 'application/json');
-    //     }
-     
-    //     $nombre = $parametros['nombre'];
-    //     $precio = $parametros['precio'];
-    //     $foto = $parametros['foto'];
-    //     $nacionalidad = $parametros['nacionalidad'];
-    //     $stock = $parametros['stock'];
-    //     var_dump($foto);
-    
-    //     $producto = new Arma();
-    //     $producto->nombre= $nombre;
-    //     $producto->precio= $precio;
-    //     $producto->foto= $foto;
-    //     $producto->nacionalidad= $nacionalidad;
-    //     $producto->stock= $stock;
-    //     $producto->CrearArma();
-
-    //     $payload = json_encode(array("mensaje" => "Arma creado con exito"));
-
-    //     $response->getBody()->write($payload);
-    //     return $response
-    //       ->withHeader('Content-Type', 'application/json');
-
-
-    // }
-
-
-
-
-
+      
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
@@ -94,9 +47,12 @@ class ArmaController extends Arma implements IApiUsable
                 $tipoArchivo = $foto->getClientMediaType();
                 $ubicacionTemporal = $foto->getStream()->getMetadata('uri');
     
-               
-                $nuevaUbicacion = './FotosArma2023' . $nombreArchivo;
+             
+                $nuevaUbicacion = './FotosArma/' . $nombreArchivo;
+              
+                
                 $foto->moveTo($nuevaUbicacion);
+
             } else {
                 // Manejar el error de carga del archivo
                 $error = $foto->getError();
@@ -131,40 +87,8 @@ class ArmaController extends Arma implements IApiUsable
     }
 
 
+    
 
-
-
-
-
-    // public function CargarUno($request, $response, $args)
-    // {
-    //     $parametros = $request->getParsedBody();
-        
-
-    //     $nombre = $parametros['nombre'];
-    //     $precio = $parametros['precio'];
-    //     $foto = $parametros['foto'];
-    //     $nacionalidad = $parametros['nacionalidad'];
-    //     $stock = $parametros['stock'];
-    //     var_dump($foto);
-
-    //     $usuario = new Arma();
-    //     $usuario->nombre= $nombre;
-    //     $usuario->precio= $precio;
-    //     $usuario->foto= $foto;
-    //     $usuario->nacionalidad= $nacionalidad;
-    //     $usuario->stock= $stock;
-
-
-
-    //     $usuario->CrearArma();
-
-    //     $payload = json_encode(array("mensaje" => "Cripto creada con exito"));
-
-    //     $response->getBody()->write($payload);
-    //     return $response
-    //       ->withHeader('Content-Type', 'application/json');
-    // }
 
     public function TraerTodos($request, $response, $args)
     {
@@ -174,17 +98,115 @@ class ArmaController extends Arma implements IApiUsable
       $response->getBody()->write($payload);
       return $response->withHeader('Content-Type', 'application/json');
     }
+////////////////////////////////////////////
+
+public function ModificarUno($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        $arma = new Arma();
+        $arma->id = $parametros['id'];
+        $arma->nombre = $parametros['nombre'];
+        $arma->precio = $parametros['precio'];
+        $arma->nacionalidad = $parametros['nacionalidad'];
+        $arma->stock = $parametros['stock'];
+        $arma->foto = $this->MoverFoto($parametros['foto']);
+     
+        Arma::ModificarArma($arma);
+        $payload = json_encode(array("mensaje" => "Arma modificada con exito"));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+
 
     public function BorrarUno($request, $response, $args)
     {
         $id = $args['id'];
         $producto = new Arma();
         $producto->id = $id;
+        $producto->cargarLog(1, $id);
         $producto->borrarArma($id);
         $payload = json_encode(array("mensaje" => "Arma borrado con exito"));
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+
+    private function MoverFoto($nombre)
+    { 
+         $carpetaBackup = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR."Backup_2023".DIRECTORY_SEPARATOR;
+        $carpeta = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR;
+      
+        $nombreFoto = $carpeta."fotoArma".$nombre.".jpg";
+        if(file_exists($nombreFoto))
+        {
+            if(!file_exists($carpetaBackup))
+            {
+                mkdir($carpetaBackup, 0777, true);
+            }
+            copy($nombreFoto, $carpetaBackup."fotoArma".$nombre.".jpg");
+        }
+        else
+        {
+            echo "La foto que desea adjuntar no existe.";
+        }
+        return $nombreFoto;
+    }
+
+
+
+
+
+    public static function ExportarCSV($path)
+    {
+        $listaProductos = Arma::obtenerTodos();
+        $file = fopen($path, "w");
+        foreach($listaProductos as $producto)
+        {
+            $separado= implode(",", (array)$producto);  
+            if($file)
+            {
+                fwrite($file, $separado.",\r\n"); 
+            }                           
+        }
+        fclose($file);  
+        return $path;     
+    }
+
+
+
+
+
+    public function ExportarArma($request, $response, $args)
+    {
+        try
+        {
+            $archivo = ArchivosCSVoPDF::ExportarCSV("./csv/Armas.csv"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
+        }
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/csv');
+        }    
+    }
+
+
+
+
+
+///////////////////////////////////////////////
 
     public function TraerFiltradoId($request, $response, $args){
         $id= $args['id'];
@@ -201,6 +223,16 @@ class ArmaController extends Arma implements IApiUsable
         $producto->id = $id;
         $producto->obtenerArma($id);
         $payload = json_encode($producto);
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function TraerFiltradoPorNacionalidad( $request,  $response,  $args) {
+        $nacionalidad = $args['nacionalidad'];
+
+        $armas=  Arma::ObtenerArmaPorNacionalidad($nacionalidad);
+ 
+        $payload = json_encode($armas);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }

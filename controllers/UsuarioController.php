@@ -6,26 +6,7 @@ require_once './db/AccesoDatos.php';
 
 class UsuarioController extends Usuario implements IApiUsable
 {
-    // public function CargarUno($request, $response, $args)
-    // {
-    //     $parametros = $request->getParsedBody();
-
-    //     $usuario = $parametros['usuario'];
-    //     $clave = $parametros['clave'];
-
-    //     // Creamos el usuario
-    //     $usr = new Usuario();
-    //     $usr->usuario = $usuario;
-    //     $usr->clave = $clave;
-    //     $usr->crearUsuario();
-
-    //     $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
-
-    //     $response->getBody()->write($payload);
-    //     return $response
-    //       ->withHeader('Content-Type', 'application/json');
-    // }
-
+     
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();

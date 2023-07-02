@@ -1,29 +1,23 @@
 <?php
-
- 
-require_once './models/Usuario.php';
-require_once './middlewares/AutentificadorJWT.php';
-require_once './interfaces/IApiUsable.php';
-require_once './models/Arma.php';
 require_once './models/VentaArmas.php';
+require_once './models/Arma.php';
+ 
 
-
-class VentaArmasController extends VentaArmas implements IApiUsable
+class VentaArmasController extends VentaArma  
 {
-
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-
-        $requiredParams = ['idUsuario', 'idArma', 'precio', 'cantidad', 'fecha'];
-
+    
+        $requiredParams = ['idUsuario', 'idArma', 'cantidad', 'fecha'];
+    
         $missingParams = [];
         foreach ($requiredParams as $param) {
             if (!isset($parametros[$param])) {
                 $missingParams[] = $param;
             }
         }
-
+    
         if (!empty($missingParams)) {
             $payload = json_encode(array("error" => "Falta el campo: " . implode(', ', $missingParams)));
             $response->getBody()->write($payload);
@@ -31,112 +25,99 @@ class VentaArmasController extends VentaArmas implements IApiUsable
                 ->withStatus(400)
                 ->withHeader('Content-Type', 'application/json');
         }
-
+     
         $idUsuario = $parametros['idUsuario'];
         $idArma = $parametros['idArma'];
-        $precio = $parametros['precio'];
+    
         $cantidad = $parametros['cantidad'];
         $fecha = $parametros['fecha'];
 
-        $venta = new VentaArmas();
-        $venta->idUsuario = $idUsuario;
-        $venta->idArma = $idArma;
-        $venta->precio = $precio;
-        $venta->cantidad = $cantidad;
-        $venta->fecha = $fecha;
-
-        $ventaId = $venta->Crear();
+          // Procesar el archivo de imagen
+          $uploadedFiles = $request->getUploadedFiles();
+          if (isset($uploadedFiles['foto'])) {
+              $foto = $uploadedFiles['foto'];
+              if ($foto->getError() === UPLOAD_ERR_OK) {
+                  // Obtener información del archivo
+                  $nombreArchivo = $foto->getClientFilename();
+                  $tipoArchivo = $foto->getClientMediaType();
+                  $ubicacionTemporal = $foto->getStream()->getMetadata('uri');
+     
+                  $arma = Arma::ObtenerArma( $idArma );
+                $usuario = Usuario::obtenerUsuarioPorId( $idUsuario );
+            
+                  $nuevaUbicacion = './FotosArma2023/' . $arma->nombre . $usuario->usuario  . date( 'Y-M-D' ).'.jpg';
+           
  
-        $uploadedFiles = $request->getUploadedFiles();
-        if (isset($uploadedFiles['imagen'])) {
-            $imagen = $uploadedFiles['imagen'];
-            if ($imagen->getError() === UPLOAD_ERR_OK) {
-                $extension = pathinfo($imagen->getClientFilename(), PATHINFO_EXTENSION);
-                $nombreArchivo = $venta->idArma . '_' . $venta->idUsuario . '_' . date('Ymd') . '.' . $extension;
-                $rutaImagen = './FotosArma2023/' . $nombreArchivo;
-                $imagen->moveTo($rutaImagen);
-            }
-        }
+                  $foto->moveTo($nuevaUbicacion);
+  
+              } else {
+                  // Manejar el error de carga del archivo
+                  $error = $foto->getError();
+                  $payload = json_encode(array("error" => "Error al cargar el archivo: " . $error));
+                  $response->getBody()->write($payload);
+                  return $response
+                      ->withStatus(400)
+                      ->withHeader('Content-Type', 'application/json');
+              }
+          } else {
+              // Manejar el caso en el que no se haya proporcionado el campo "foto"
+              $payload = json_encode(array("error" => "Falta el campo: foto"));
+              $response->getBody()->write($payload);
+              return $response
+                  ->withStatus(400)
+                  ->withHeader('Content-Type', 'application/json');
+          }
+      
+        
+        $usu = new VentaArma();
+        $usu->idUsuario = $idUsuario;
+        $usu->idArma = $idArma;
+       // $usu->foto = $nuevaUbicacion;
+        $usu->cantidad = $cantidad;
+        $usu->fecha = $fecha;
+        $usu->crearVentaArma();
 
-        $payload = json_encode(array("mensaje" => "VentaArmas creada con éxito", "idVenta" => $ventaId));
-
+      
+    
+    
+        $payload = json_encode(array("mensaje" => "El usuario ah sido creado" ));
+    
         $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response
+            ->withHeader('Content-Type', 'application/json');
     }
-
-
+    
+   
+    
     public function TraerTodos($request, $response, $args)
     {
-      $lista = VentaArmas::obtenerTodos();
-      $payload = json_encode(array("Lista de Ventas" => $lista));
-
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
-    }
-
-    public function TraerUno($request, $response, $args)
-    {
-        $id = $args['id'];
-        $venta = VentaArmas::ObtenerPorId($id);
-        $payload = json_encode($venta);
+        $lista = Usuario::obtenerTodos();
+        $payload = json_encode(array("listaUsuario" => $lista));
 
         $response->getBody()->write($payload);
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
-    
 
 
-    public function TraerTodosFiltradoPorNacionalidadYFecha($request, $response, $args)
-{
-    $primerFecha = $args['primerFecha'];
-    $segundaFecha = $args['segundaFecha'];
-    $nacionalidad = $args['nacionalidad'];
-   
-
-    $consulta = "SELECT *
-                 FROM ventasArmas
-                 INNER JOIN arma ON ventasArmas.idArma = arma.id
-                 WHERE arma.nacionalidad = :nacionalidad
-                 AND ventasArmas.fecha BETWEEN :fechaInicio AND :fechaFin";
-
-    $objAccesoDatos = AccesoDatos::obtenerInstancia();
-    $stmt = $objAccesoDatos->prepararConsulta($consulta);
-    $stmt->bindParam(':nacionalidad', $nacionalidad, PDO::PARAM_STR);
-    $stmt->bindParam(':fechaInicio', $primerFecha, PDO::PARAM_STR);
-    $stmt->bindParam(':fechaFin', $segundaFecha, PDO::PARAM_STR);
-    $stmt->execute();
-
-    $listaVentas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $payload = json_encode(array("Lista de ventas" => $listaVentas));
-
-    $response->getBody()->write($payload);
-    return $response->withHeader('Content-Type', 'application/json');
-}
-
-    public function TraerUsuariosPorArma($request, $response, $args)
+    public function TraerTodosPorNacionalidadYFecha($request, $response, $args)
     {
-        $nombreArma = $args['nombreArma'];
-    
-        $consulta = "SELECT DISTINCT usuario.id, usuario.nombre, usuario.apellido 
-                     FROM ventaArmas 
-                     INNER JOIN usuario ON ventaArmas.idUsuario = usuario.id 
-                     INNER JOIN arma ON ventaArmas.idArma = arma.id 
-                     WHERE arma.nombre = :nombreArma";
-    
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $stmt = $objAccesoDatos->prepararConsulta($consulta);
-        $stmt->bindParam(':nombreArma', $nombreArma, PDO::PARAM_STR);
-        $stmt->execute();
-    
-        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        $payload = json_encode(array("Usuarios que compraron el arma" => $usuarios));
-    
+        $primerFecha= $args['primerFecha'];
+        $segundaFecha= $args['segundaFecha'];
+        $lista = VentaArma::obtenerTodos("SELECT * FROM ventaArmas inner join arma on idArma= arma.id where nacionalidad= 'EEUU'and ventaarmas.fecha between '$primerFecha' and '$segundaFecha'");
+        $payload = json_encode(array("Lista de ventaarmas" => $lista));
+
         $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response
+          ->withHeader('Content-Type', 'application/json');
     }
 
+    public function TraerFiltrado($request, $response, $args){
+        $nombre= $args['nombre'];
+        $lista = VentaArma::obtenerTodos("SELECT * FROM ventaArmas inner join arma on idArma= arma.id where arma.nombre = '{$nombre}'");
+        
+        $response->getBody()->write(json_encode($lista));
+        return $response;
+    }
+    
 }

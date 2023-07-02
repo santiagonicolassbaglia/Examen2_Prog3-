@@ -62,6 +62,16 @@ class Usuario
         return $consulta->fetchObject('Usuario');
     }
 
+    public static function obtenerUsuarioPorId($id)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM usuarios WHERE id = :id");
+        $consulta->bindValue(':id', $id );
+        $consulta->execute();
+
+        return $consulta->fetchObject();
+    }
+
     public static function modificarUno($id, $usuario, $clave, $mail, $tipo)
     { 
         $objAccesoDatos = AccesoDatos::obtenerInstancia();

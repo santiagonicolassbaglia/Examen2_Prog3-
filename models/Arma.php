@@ -49,6 +49,13 @@ class Arma
     
         return $armas;
     }
+    // public static function obtenerTodos()
+    // {
+    //     $objAccesoDatos = AccesoDatos::obtenerInstancia();
+    //     $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM arma");
+    //     $consulta->execute();
+    //     return $consulta->fetchAll(PDO::FETCH_CLASS, 'Arma');
+    // }
 
     public static function ObtenerArma($id)
     {
@@ -60,20 +67,29 @@ class Arma
         return $consulta->fetchObject('arma');
     }
 
-    public static function ModificarArma($id, $nombre, $precio, $foto, $nacionalidad, $stock)
+    public static function ObtenerArmaPorNacionalidad($nacionalidad)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM arma WHERE nacionalidad = :nacionalidad");
+        $consulta->bindValue(':nacionalidad', $nacionalidad, PDO::PARAM_STR);
+        $consulta->execute();
+        
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public static function modificarArma($arma)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE arma SET nombre = :nombre, precio = :precio, foto = :foto, nacionalidad = :nacionalidad ,stock= :stock  WHERE id = :id");
-        $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
-        $consulta->bindValue(':precio', $precio, PDO::PARAM_INT);
-        $consulta->bindValue(':foto', $foto, PDO::PARAM_STR);
-        $consulta->bindValue(':nacionalidad', $nacionalidad, PDO::PARAM_STR);
-        $consulta->bindValue(':stock', $stock, PDO::PARAM_INT);
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE arma SET nombre = :nombre, precio = :precio, nacionalidad = :nacionalidad, foto = :foto, stock = :stock WHERE id = :id");
+        $consulta->bindValue(':nombre', $arma->nombre, PDO::PARAM_STR);
+        $consulta->bindValue(':precio', $arma->precio, PDO::PARAM_INT);
+        $consulta->bindValue(':nacionalidad', $arma->nacionalidad, PDO::PARAM_STR);
+        $consulta->bindValue(':foto', $arma->foto, PDO::PARAM_STR);
+        $consulta->bindValue(':stock', $arma->stock, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $arma->id, PDO::PARAM_INT);
         $consulta->execute();
     }
-    
     
 
     public static function borrarArma($usuario)
@@ -86,5 +102,20 @@ class Arma
         $consulta->execute();
     }
   
+
+    public static function cargarLog($idUser, $idArma)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO logs (idUsuario, idArma, accion, fecha_accion) VALUES (:id_usuario, :id_arma, :accion, :fecha_accion)");
+        $consulta->bindValue(':id_usuario', $idUser);
+        $consulta->bindValue(':id_arma', $idArma);
+        $consulta->bindValue(':accion', "Borrar");
+        $fecha = new DateTime(date("d-m-Y"));
+        $consulta->bindValue(':fecha_accion', date_format($fecha, 'Y-m-d'));
+        $consulta->execute();
+    }
+
+
+
     
 }

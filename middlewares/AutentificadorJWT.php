@@ -4,8 +4,8 @@
 
 class AutentificadorJWT
   { 
-    private static $miClaveSecreta = "Progra3"; //Clave Secreta
-    private static $algoritmoDeCodificacion = ['HS256']; // Algoritmo de Codificacion
+    private static $miClaveSecreta = "tioSanti"; //Clave Secreta
+    private static $algoritmoDeCodificacion = ['HS256'];  
     private static $aud = null;
 
     public static function NuevoToken($data)
@@ -13,7 +13,7 @@ class AutentificadorJWT
         $ahora = time();
         $payload = array(
             'iat' => $ahora,
-            'exp' => $ahora + 2592000, // 1 mes
+            'exp' => $ahora + 60+60*24, // 1 mes
             'aud' => self::Aud(),
             'data' => $data
         );
@@ -73,7 +73,7 @@ class AutentificadorJWT
     }
     
     public static function ObtenerData($token)
-    {
+    { 
         return JWT::decode(
             $token,
             self::$miClaveSecreta,

@@ -16,13 +16,13 @@ require_once './db/AccesoDatos.php';
 require __DIR__ . "./vendor/autoload.php";
 require_once './middlewares/AutentificadorJWT.php';
 require_once './middlewares/Logger.php';
-require_once './middlewares/MWToken.php';
+require_once './middlewares/ConToken.php';
 require_once './controllers/LoginController.php';
 require_once './controllers/ArmaController.php';
 require_once './controllers/UsuarioController.php';
 require_once './controllers/VentaArmasController.php';
- require_once './middlewares/MWAdmin.php';
-
+ require_once './middlewares/SoloAdmin.php';
+ require_once './middlewares/Validaciones.php';
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 //$dotenv->safeLoad();
@@ -37,32 +37,6 @@ $app->addErrorMiddleware(true, true, true);
 //$app->post('/usuario', \UsuarioController::class . ':CargarUno');
 
 
-// JWT
-// $app->group('/autentificacion', function (RouteCollectorProxy $group) {
-
-//     $group->post('/crearToken', function (Request $request, Response $response) {    
-//       $parametros = $request->getParsedBody();
-     
-//       $usuario = $parametros['usuario'];
-//       $contraseña = $parametros['clave'];
-  
-//       $datos = array('usuario' => $usuario, 'clave' => $contraseña);
-  
-//       try 
-//       {
-//         $token = AutentificadorJWT::CrearToken($datos);
-//         $payload = json_encode(array('usuario' => $usuario, 'jwt' => $token));
-//       } 
-//       catch (Exception $e) 
-//       {
-//         $payload = json_encode(array('error' => $e->getMessage()));
-//       }
-  
-//       $response->getBody()->write($payload);
-//       return $response
-//         ->withHeader('Content-Type', 'application/json');
-//     });
-//   });
 
 $app->post('/login', \LoginController::class . ':GenerarToken');
   
@@ -72,18 +46,27 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
    } );
  
   
-  $app->group('/arma', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \ArmaController::class . ':CargarUno')->add(new MWAdmin()) ;
-    $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltrado');
-    $group->get('/unico/{id}', \ArmaController::class . ':TraerFiltradoId') ;
-    $group->get('[/]', \ArmaController::class . ':TraerTodos')->add(new MWToken());
-  
+    $app->group('/arma', function (RouteCollectorProxy $group) {
+    $group->post('[/]', \ArmaController::class . ':CargarUno') 
+    ->add(\Validaciones::class . ':ValidarAdmin') ;
+    $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltradoPorNacionalidad');
+    $group->get('/traer/{id}', \ArmaController::class . ':TraerFiltradoId')
+    ->add(\Validaciones::class . ':ValidarJWT') ;
+    $group->get('[/]', \ArmaController::class . ':TraerTodos') 
+    ->add(\Validaciones::class . ':ValidarJWT') ;
+    // $group->put('/', \ArmaController::class . ':ModificarUno')->add(new SoloAdmin());
+  $group->delete('/{id}', \ArmaController::class . ':BorrarUno') 
+  ->add(\Validaciones::class . ':ValidarAdmin') ;
+  $group->get('/csv/', \ArmaController::class . ':ExportarArma');
   });
    
   
   $app->group('/ventaArmas', function (RouteCollectorProxy $group){
-    $group->post('[/]', \VentaArmasController::class . ':CargarUno');
-    $group->get('/{primerFecha}/{segundaFecha}/{nacionalidad}', \VentaArmasController::class . ':TraerTodosFiltradoPorNacionalidadYFecha');
+    $group->post('[/]', \VentaArmasController::class . ':CargarUno') 
+    ->add(\Validaciones::class . ':ValidarJWT') ; 
+    $group->get('[/]', \VentaArmasController::class . ':TraerTodos') ->add(new SoloAdmin()) ;
+    $group->get('/{primerFecha}/{segundaFecha}/{nacionalidad}', \VentaArmasController::class . ':TraerTodosPorNacionalidadYFecha')  
+    ->add(\Validaciones::class . ':ValidarJWT') ; 
     
     $group->get('/{nombre}', \VentaArmasController::class . ':TraerFiltrado');
     
@@ -91,7 +74,7 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
    
   
   
-  // $app->post("/arma", \ArmaController::class. ":CargarUno");
+  $app->put("/arma", \ArmaController::class. ":ModificarUno");
   // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   //  $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   $app->run();
