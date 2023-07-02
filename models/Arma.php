@@ -95,26 +95,15 @@ class Arma
     public static function borrarArma($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE arma SET fechaBaja = :fechaBaja WHERE id = :id");
-        $fecha = new DateTime(date("d-m-Y"));
+        $consulta = $objAccesoDato->prepararConsulta("DELETE FROM arma WHERE id = :id");
+       
         $consulta->bindValue(':id', $usuario, PDO::PARAM_INT);
-        $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
+     
         $consulta->execute();
     }
   
 
-    public static function cargarLog($idUser, $idArma)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO logs (idUsuario, idArma, accion, fecha_accion) VALUES (:id_usuario, :id_arma, :accion, :fecha_accion)");
-        $consulta->bindValue(':id_usuario', $idUser);
-        $consulta->bindValue(':id_arma', $idArma);
-        $consulta->bindValue(':accion', "Borrar");
-        $fecha = new DateTime(date("d-m-Y"));
-        $consulta->bindValue(':fecha_accion', date_format($fecha, 'Y-m-d'));
-        $consulta->execute();
-    }
-
+    
 
 
     

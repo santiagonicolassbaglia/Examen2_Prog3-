@@ -43,6 +43,22 @@ class VentaArma
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'VentaArmas');
     }
+
+    public static function obtenerTodosNacionalidadYFechas($nacionalidad, $primerFecha, $segundaFecha)
+    { $query ="SELECT * FROM ventaArmas 
+        inner join arma on idArma= arma.id
+         where arma.nacionalidad= :nacionalidad 
+         and ventaarmas.fecha 
+         between :primerFecha and :segundaFecha";
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta($query);
+        $consulta->bindValue(':nacionalidad', $nacionalidad, PDO::PARAM_STR);
+        $consulta->bindValue(':primerFecha', $primerFecha );
+        $consulta->bindValue(':segundaFecha', $segundaFecha );
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
     public static function obtenerTodosNombre($nombre)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
@@ -85,5 +101,7 @@ class VentaArma
         return "$this->id, $this->idUsuario, $this->idArma, $this->cantidad, $this->precio, $this->fecha";
     }
 
+
+    
 }
 ?>

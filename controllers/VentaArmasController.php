@@ -101,10 +101,10 @@ class VentaArmasController extends VentaArma
 
 
     public function TraerTodosPorNacionalidadYFecha($request, $response, $args)
-    {
+    {$nacionalidad= $args['nacionalidad'];
         $primerFecha= $args['primerFecha'];
         $segundaFecha= $args['segundaFecha'];
-        $lista = VentaArma::obtenerTodos("SELECT * FROM ventaArmas inner join arma on idArma= arma.id where nacionalidad= 'EEUU'and ventaarmas.fecha between '$primerFecha' and '$segundaFecha'");
+        $lista =  VentaArma::obtenerTodosNacionalidadYFechas($nacionalidad,$primerFecha,$segundaFecha);
         $payload = json_encode(array("Lista de ventaarmas" => $lista));
 
         $response->getBody()->write($payload);
@@ -114,7 +114,7 @@ class VentaArmasController extends VentaArma
 
     public function TraerFiltrado($request, $response, $args){
         $nombre= $args['nombre'];
-        $lista = VentaArma::obtenerTodos("SELECT * FROM ventaArmas inner join arma on idArma= arma.id where arma.nombre = '{$nombre}'");
+        $lista = VentaArma::obtenerTodosNombre( $nombre);
         
         $response->getBody()->write(json_encode($lista));
         return $response;

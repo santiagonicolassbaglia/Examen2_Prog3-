@@ -103,14 +103,51 @@ class ArmaController extends Arma implements IApiUsable
 public function ModificarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
+        var_dump($parametros);
         $arma = new Arma();
         $arma->id = $parametros['id'];
         $arma->nombre = $parametros['nombre'];
         $arma->precio = $parametros['precio'];
         $arma->nacionalidad = $parametros['nacionalidad'];
         $arma->stock = $parametros['stock'];
-        $arma->foto = $this->MoverFoto($parametros['foto']);
+
+        $uploadedFiles = $request->getUploadedFiles();
+        if (isset($uploadedFiles['foto'])) {
+            $foto = $uploadedFiles['foto'];
+            if ($foto->getError() === UPLOAD_ERR_OK) {
+                // Obtener información del archivo
+                $nombreArchivo = $foto->getClientFilename();
+                $tipoArchivo = $foto->getClientMediaType();
+                $ubicacionTemporal = $foto->getStream()->getMetadata('uri');
+    
+               
+                $nuevaUbicacion = './Backup_2023/' . $nombreArchivo;
+                $foto->moveTo($nuevaUbicacion);
+            } else {
+                // Manejar el error de carga del archivo
+                $error = $foto->getError();
+                $payload = json_encode(array("error" => "Error al cargar el archivo: " . $error));
+                $response->getBody()->write($payload);
+                return $response
+                    ->withStatus(400)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } else {
+            // Manejar el caso en el que no se haya proporcionado el campo "foto"
+            $payload = json_encode(array("error" => "Falta el campo: foto"));
+            $response->getBody()->write($payload);
+            return $response
+                ->withStatus(400)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+    
+
+       
      
+
+
+
         Arma::ModificarArma($arma);
         $payload = json_encode(array("mensaje" => "Arma modificada con exito"));
         $response->getBody()->write($payload);
@@ -121,10 +158,11 @@ public function ModificarUno($request, $response, $args)
 
     public function BorrarUno($request, $response, $args)
     {
-        $id = $args['id'];
+ 
+       $id = $args['idArma'];
         $producto = new Arma();
         $producto->id = $id;
-        $producto->cargarLog(1, $id);
+ 
         $producto->borrarArma($id);
         $payload = json_encode(array("mensaje" => "Arma borrado con exito"));
         $response->getBody()->write($payload);

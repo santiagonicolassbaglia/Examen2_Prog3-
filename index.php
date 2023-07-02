@@ -28,8 +28,9 @@ require_once './controllers/VentaArmasController.php';
 //$dotenv->safeLoad();
 
 // Instantiate App
-$app = AppFactory::create();
 
+$app = AppFactory::create();
+$app->addBodyParsingMiddleware();
 // Add error middleware
 $app->addErrorMiddleware(true, true, true);
 
@@ -47,7 +48,8 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
  
   
     $app->group('/arma', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \ArmaController::class . ':CargarUno') 
+      $group->get('/csv', \ArmaController::class . ':ExportarArma');
+      $group->post('[/]', \ArmaController::class . ':CargarUno') 
     ->add(\Validaciones::class . ':ValidarAdmin') ;
     $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltradoPorNacionalidad');
     $group->get('/traer/{id}', \ArmaController::class . ':TraerFiltradoId')
@@ -55,9 +57,11 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
     $group->get('[/]', \ArmaController::class . ':TraerTodos') 
     ->add(\Validaciones::class . ':ValidarJWT') ;
     // $group->put('/', \ArmaController::class . ':ModificarUno')->add(new SoloAdmin());
-  $group->delete('/{id}', \ArmaController::class . ':BorrarUno') 
-  ->add(\Validaciones::class . ':ValidarAdmin') ;
-  $group->get('/csv/', \ArmaController::class . ':ExportarArma');
+  $group->delete('/{idUsuario}/{idArma}', \ArmaController::class . ':BorrarUno') 
+  ->add(\Validaciones::class . ':TablaBorrados') 
+  ->add(\Validaciones::class . ':ValidarAdmin')
+  ;
+
   });
    
   
@@ -74,7 +78,7 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
    
   
   
-  $app->put("/arma", \ArmaController::class. ":ModificarUno");
+  $app->post("/arma/modificar", \ArmaController::class. ":ModificarUno");
   // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   //  $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   $app->run();

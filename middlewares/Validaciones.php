@@ -5,6 +5,7 @@
  use Psr\Http\Message\ServerRequestInterface as Request;
  use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  use Slim\Psr7\Response;
+ use Slim\Routing\RouteContext;
 class Validaciones
   { 
     public function ValidarJWT( $request,  $handler) 
@@ -38,7 +39,7 @@ class Validaciones
         //$token = trim(explode("Bearer", $header)[1]);
         sscanf($header, 'Bearer %s', $token);
         $response = new Response();
-var_dump($token);
+ 
         try
         {
           
@@ -103,7 +104,43 @@ var_dump($token);
 
         return $response->withHeader('Content-Type', 'application/json');
     }
-   }
+  
+
+
+
+
+   public function TablaBorrados($request, $handler)
+   {
+ 
+
+    $routeContext = RouteContext::fromRequest($request);
+    $route = $routeContext->getRoute();
+
+   
+    if (!empty($route)) {
+       
+        $routeArgs = $route->getArguments();
+
+     
+       
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO logs (id_usuario, id_arma,accion, fecha_accion)  VALUES (:id_usuario, :id_arma, :accion, :fecha_accion )"); 
+ 
+        $consulta->bindValue(':id_usuario',  $routeArgs['idUsuario'], PDO::PARAM_STR);
+        $consulta->bindValue(':id_arma', $routeArgs['idArma'], PDO::PARAM_INT);
+        $consulta->bindValue(':accion', 'borrar');
+        $consulta->bindValue(':fecha_accion', date("Y-m-d"));
+    
+    
+        $consulta->execute();
+    }
+     $response = $handler->handle($request);
+
+
+    return $response;
+   } 
+
+}
 ?>
 
 
