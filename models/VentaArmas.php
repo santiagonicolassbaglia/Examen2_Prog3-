@@ -7,7 +7,7 @@ class VentaArma
     public $idArma;
     public $cantidad;
     public $precio;
- 
+    public $foto;
     public $fecha;
 
     public function crearVentaArma()
@@ -18,7 +18,7 @@ class VentaArma
         $consulta->bindValue(':idUsuario', $this->idUsuario, PDO::PARAM_INT);
         $consulta->bindValue(':idArma', $this->idArma, PDO::PARAM_INT);
         $consulta->bindValue(':cantidad', $this->cantidad, PDO::PARAM_INT);
- 
+  
         $consulta->bindValue(':precio', $this->cantidad * $arma->precio);
         $consulta->bindValue(':fecha', $this->fecha);
 
@@ -58,14 +58,32 @@ class VentaArma
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+   
+     
     
+    // public static function obtenerTodosNombre($nombre)
+    // {
+    //     $objAccesoDatos = AccesoDatos::obtenerInstancia();
+    //     $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.id, usuarios.mail, usuarios.tipo FROM usuarios JOIN ventaarmas ON usuarios.id = ventaarmas.idUsuario JOIN arma  ON arma.id = ventaarmas.idArma WHERE arma.nombre = :nombre");
+    //     $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
+    //     $consulta->execute();
+    //     return $consulta->fetchAll(PDO::FETCH_CLASS, 'Usuario');
+    // }
+
+     //traer todos los usuarios que compraron un arma en particular
     public static function obtenerTodosNombre($nombre)
     {
+        $query ="SELECT usuarios.id, usuarios.mail, usuarios.tipo FROM usuarios 
+        JOIN ventaarmas ON usuarios.id = ventaarmas.idUsuario 
+        JOIN arma  ON arma.id = ventaarmas.idArma 
+        WHERE arma.nombre = :nombre";
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.id, usuarios.mail, usuarios.tipo FROM usuarios JOIN ventaarmas ON usuarios.id = ventaarmas.idUsuario JOIN arma  ON arma.id = ventaarmas.idArma WHERE arma.nombre = :nombre");
+        $consulta = $objAccesoDatos->prepararConsulta($query);
         $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
         $consulta->execute();
-        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Usuario');
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function obtenerVentaArma($id)

@@ -4,20 +4,21 @@ require_once './models/Arma.php';
  
 
 class VentaArmasController extends VentaArma  
-{
+{ 
+
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-    
-        $requiredParams = ['idUsuario', 'idArma', 'cantidad', 'fecha'];
-    
+        
+        $requiredParams = ['idUsuario', 'idArma','precio', 'cantidad', 'fecha'];
+        
         $missingParams = [];
         foreach ($requiredParams as $param) {
             if (!isset($parametros[$param])) {
                 $missingParams[] = $param;
             }
         }
-    
+           
         if (!empty($missingParams)) {
             $payload = json_encode(array("error" => "Falta el campo: " . implode(', ', $missingParams)));
             $response->getBody()->write($payload);
@@ -25,14 +26,14 @@ class VentaArmasController extends VentaArma
                 ->withStatus(400)
                 ->withHeader('Content-Type', 'application/json');
         }
-     
+         
         $idUsuario = $parametros['idUsuario'];
         $idArma = $parametros['idArma'];
-    
+        $precio = $parametros['precio'];
         $cantidad = $parametros['cantidad'];
         $fecha = $parametros['fecha'];
-
-          // Procesar el archivo de imagen
+    
+    // Procesar el archivo de imagen
           $uploadedFiles = $request->getUploadedFiles();
           if (isset($uploadedFiles['foto'])) {
               $foto = $uploadedFiles['foto'];
@@ -46,7 +47,7 @@ class VentaArmasController extends VentaArma
                 $usuario = Usuario::obtenerUsuarioPorId( $idUsuario );
             
                   $nuevaUbicacion = './FotosArma2023/' . $arma->nombre . $usuario->usuario  . date( 'Y-M-D' ).'.jpg';
-           
+                  var_dump($nuevaUbicacion);
  
                   $foto->moveTo($nuevaUbicacion);
   
@@ -67,26 +68,25 @@ class VentaArmasController extends VentaArma
                   ->withStatus(400)
                   ->withHeader('Content-Type', 'application/json');
           }
-      
-        
-        $usu = new VentaArma();
-        $usu->idUsuario = $idUsuario;
-        $usu->idArma = $idArma;
-       // $usu->foto = $nuevaUbicacion;
-        $usu->cantidad = $cantidad;
-        $usu->fecha = $fecha;
-        $usu->crearVentaArma();
+    
+        $producto = new VentaArma();
+        $producto->idUsuario = $idUsuario;
+        $producto->idArma = $idArma;
+        $producto->precio = $precio;
+        $producto->cantidad = $cantidad ;
+        $producto->fecha = date( 'Y-M-D');
+        $producto->foto = $nuevaUbicacion;
+        $producto->crearVentaArma();
 
-      
+
     
-    
-        $payload = json_encode(array("mensaje" => "El usuario ah sido creado" ));
+        $payload = json_encode(array("mensaje" => "VentaArma creado con éxito"));
     
         $response->getBody()->write($payload);
         return $response
             ->withHeader('Content-Type', 'application/json');
     }
-    
+
    
     
     public function TraerTodos($request, $response, $args)

@@ -141,13 +141,7 @@ public function ModificarUno($request, $response, $args)
                 ->withHeader('Content-Type', 'application/json');
         }
 
-    
-
-       
      
-
-
-
         Arma::ModificarArma($arma);
         $payload = json_encode(array("mensaje" => "Arma modificada con exito"));
         $response->getBody()->write($payload);
@@ -170,31 +164,28 @@ public function ModificarUno($request, $response, $args)
     }
 
 
-    private function MoverFoto($nombre)
-    { 
-         $carpetaBackup = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR."Backup_2023".DIRECTORY_SEPARATOR;
-        $carpeta = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR;
+    // private function MoverFoto($nombre)
+    // { 
+    //      $carpetaBackup = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR."Backup_2023".DIRECTORY_SEPARATOR;
+    //     $carpeta = ".".DIRECTORY_SEPARATOR."img".DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR;
       
-        $nombreFoto = $carpeta."fotoArma".$nombre.".jpg";
-        if(file_exists($nombreFoto))
-        {
-            if(!file_exists($carpetaBackup))
-            {
-                mkdir($carpetaBackup, 0777, true);
-            }
-            copy($nombreFoto, $carpetaBackup."fotoArma".$nombre.".jpg");
-        }
-        else
-        {
-            echo "La foto que desea adjuntar no existe.";
-        }
-        return $nombreFoto;
-    }
+    //     $nombreFoto = $carpeta."fotoArma".$nombre.".jpg";
+    //     if(file_exists($nombreFoto))
+    //     {
+    //         if(!file_exists($carpetaBackup))
+    //         {
+    //             mkdir($carpetaBackup, 0777, true);
+    //         }
+    //         copy($nombreFoto, $carpetaBackup."fotoArma".$nombre.".jpg");
+    //     }
+    //     else
+    //     {
+    //         echo "La foto que desea adjuntar no existe.";
+    //     }
+    //     return $nombreFoto;
+    // }
 
-
-
-
-
+ 
     public static function ExportarCSV($path)
     {
         $listaProductos = Arma::obtenerTodos();
@@ -240,7 +231,30 @@ public function ModificarUno($request, $response, $args)
         }    
     }
 
-
+    public function ExportarPDF($request, $response, $args)
+    {
+        try
+        {
+            $archivo = ArchivosCSVoPDF::ExportarPDF("./pdf/Armas.pdf"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
+        }
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/pdf');
+        }    
+    }
 
 
 

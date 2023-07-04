@@ -49,6 +49,7 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
   
     $app->group('/arma', function (RouteCollectorProxy $group) {
       $group->get('/csv', \ArmaController::class . ':ExportarArma');
+      $group->get('/pdf', \ArmaController::class . ':ExportarPDF');
       $group->post('[/]', \ArmaController::class . ':CargarUno') 
     ->add(\Validaciones::class . ':ValidarAdmin') ;
     $group->get('/{nacionalidad}', \ArmaController::class . ':TraerFiltradoPorNacionalidad');
@@ -68,7 +69,8 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
   $app->group('/ventaArmas', function (RouteCollectorProxy $group){
     $group->post('[/]', \VentaArmasController::class . ':CargarUno') 
     ->add(\Validaciones::class . ':ValidarJWT') ; 
-    $group->get('[/]', \VentaArmasController::class . ':TraerTodos') ->add(new SoloAdmin()) ;
+    $group->get('[/]', \VentaArmasController::class . ':TraerTodos')  
+    ->add(\Validaciones::class . ':ValidarAdmin') ;
     $group->get('/{primerFecha}/{segundaFecha}/{nacionalidad}', \VentaArmasController::class . ':TraerTodosPorNacionalidadYFecha')  
     ->add(\Validaciones::class . ':ValidarJWT') ; 
     
