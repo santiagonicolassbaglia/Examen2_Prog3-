@@ -4,7 +4,7 @@
 
 class AutentificadorJWT
   { 
-    private static $miClaveSecreta = "tioSanti"; //Clave Secreta
+    private static $miClaveSecreta = "tioSanti";  
     private static $algoritmoDeCodificacion = ['HS256'];  
     private static $aud = null;
 
@@ -13,7 +13,7 @@ class AutentificadorJWT
         $ahora = time();
         $payload = array(
             'iat' => $ahora,
-            // 'exp' => $ahora + 60+60*24, // 1 mes
+            // 'exp' => $ahora + 60+60*24, 
             'aud' => self::Aud(),
             'data' => $data
         );
