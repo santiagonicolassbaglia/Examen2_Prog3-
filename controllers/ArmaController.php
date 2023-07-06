@@ -288,4 +288,5 @@ public function ModificarUno($request, $response, $args)
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+    
 }

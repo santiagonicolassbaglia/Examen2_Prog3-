@@ -23,6 +23,7 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/VentaArmasController.php';
  require_once './middlewares/SoloAdmin.php';
  require_once './middlewares/Validaciones.php';
+ require_once './controllers/csvControler.php';
 // Load ENV
 //$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 //$dotenv->safeLoad();
@@ -67,6 +68,9 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
    
   
   $app->group('/ventaArmas', function (RouteCollectorProxy $group){
+    $group->get('/pdf', \VentaArmasController::class . ':ExportarVentaArmasPDF');
+    $group->get('/csv', \VentaArmasController::class . ':ExportarLogsCsv');
+    $group->get('/csv2.0', \VentaArmasController::class . ':ExportarLogsCsv');
     $group->post('[/]', \VentaArmasController::class . ':CargarUno') 
     ->add(\Validaciones::class . ':ValidarJWT') ; 
     $group->get('[/]', \VentaArmasController::class . ':TraerTodos')  
@@ -78,9 +82,10 @@ $app->post('/login', \LoginController::class . ':GenerarToken');
     
   });
    
-  
-  
+  $app->get('/archivos/descargar/{baseDatos}',  \csvControler::class . ':descargarcsv');
+  $app->get('/archivos/descargarVentaPdf/{baseDatos}',  \csvControler::class . ':descargarVentaPdf');
   $app->post("/arma/modificar", \ArmaController::class. ":ModificarUno");
+
   // $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   //  $app->post("/usuario", \UsuarioController::class. ":CargarUno");
   $app->run();

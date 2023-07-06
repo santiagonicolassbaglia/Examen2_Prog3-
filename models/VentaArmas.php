@@ -119,6 +119,55 @@ class VentaArma
         return "$this->id, $this->idUsuario, $this->idArma, $this->cantidad, $this->precio, $this->fecha";
     }
 
+    public static function ExportarPDFVentas($path)
+{  
+    $objAccesoDatos = AccesoDatos::obtenerInstancia();
+    $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM ventaarmas WHERE fecha > DATE_SUB(NOW(), INTERVAL 1 MONTH) ORDER BY fecha DESC");
+    $consulta->execute();
+    $ventas = $consulta->fetchAll(PDO::FETCH_CLASS, 'VentaArma');
+
+    $file = fopen($path, "w");
+    foreach ($ventas as $venta) {
+        fwrite($file, json_encode($venta)); // Escribir cada venta en el archivo
+    }
+    fclose($file);
+
+    return $path;
+}
+
+public static function ExportarcsvLogs($path)
+{  
+    $objAccesoDatos = AccesoDatos::obtenerInstancia();
+    $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM logs");
+    $consulta->execute();
+    $ventas = $consulta->fetchAll(PDO::FETCH_ASSOC, 'Logs');
+
+    $file = fopen($path, "w");
+    foreach ($ventas as $venta) {
+        fwrite($file, json_encode($venta)); // Escribir cada venta en el archivo
+    }
+    fclose($file);
+
+    return $path;
+}
+
+
+
+public static function ExportarLogsCSV2($path)
+{$objAccesoDatos = AccesoDatos::obtenerInstancia();
+     
+    $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM logs");
+    $consulta->execute();
+    $logs = $consulta->fetchAll(PDO::FETCH_ASSOC, 'logs');
+    $file = fopen($path, "w");
+    foreach ($logs as $log) {
+        fwrite($file, json_encode($log));  
+    }
+
+
+    fclose($file);  
+    return $path;     
+}
 
     
 }

@@ -120,4 +120,64 @@ class VentaArmasController extends VentaArma
         return $response;
     }
     
+
+
+    public function ExportarVentaArmasPDF($request, $response, $args)
+    {
+        try
+        {
+            $archivo = VentaArma::ExportarPDFVentas("./pdf/VentaArmas.pdf"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
+        }
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/pdf');
+        }    
+    }
+
+
+
+
+
+    public function ExportarLogsCsv($request, $response, $args)
+    {
+        try
+        {
+            $archivo = VentaArma::ExportarLogsCSV2("./csv/Logs.csv"); 
+            if(file_exists($archivo) && filesize($archivo) > 0)
+            {
+                $payload = json_encode(array("Archivo creado:" => $archivo));
+            }
+            else
+            {
+                $payload = json_encode(array("Error" => "Datos ingresados invalidos."));
+            }
+            $response->getBody()->write($payload);
+        }
+        catch(Exception $e)
+        {
+            echo $e;
+        }
+        finally
+        {
+            return $response->withHeader('Content-Type', 'text/csv');
+        }    
+    }
+
+
+
+    
+
 }
